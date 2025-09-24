@@ -1,0 +1,17 @@
+[
+    {
+        "id": "SEC-RAI-001",
+        "title": "Responsible AI & Security Guidelines",
+        "text": "Projects must follow privacy-by-design, data minimization, PII handling, bias evaluation, model monitoring, and incident response procedures. Include DPIA where applicable..."
+    },
+    {
+        "id": "PMO-SDLC-002",
+        "title": "Enterprise SDLC & Phase Gates",
+        "text": "Phases: initiation, discovery, planning, build, test, deploy, hypercare. Each requires deliverables: BRD, architecture review, threat model, test plan, UAT sign-off..."
+    },
+    {
+        "id": "CLOUD-ARCH-101",
+        "title": "Reference Cloud Architecture",
+        "text": "Three-tier architecture with API gateway, autoscaling app tier, managed DB with read replicas, IaC via Terraform, CI/CD with canary releases, monitoring with..."
+    }
+]
