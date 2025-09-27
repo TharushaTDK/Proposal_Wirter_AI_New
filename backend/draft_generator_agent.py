@@ -21,38 +21,76 @@ class DraftRequest(BaseModel):
 
 @app.post("/draft")
 def draft(req: DraftRequest):
-    prompt = (
-        f"You are a professional proposal writer. Generate a detailed multi-paragraph draft "
-        f"for the proposal. Use the following:\n"
-        f"Title: {req.title}\nSummary: {req.summary}\nKey Points:\n"
-        f"{json.dumps(req.key_points, indent=2)}\n\n"
-        f"Instructions:\n"
-        f"1. Write an introductory paragraph summarizing the proposal.\n"
-        f"2. Write one paragraph for each key point explaining it in detail.\n"
-        f"3. Write a concluding paragraph.\n"
-        f"Return ONLY a JSON object with one field: 'full_draft'."
-    )
+    """
+    Generate a very long, detailed multi-paragraph proposal draft,
+    ensuring each key point is expanded into multiple paragraphs.
+    """
 
+    full_draft = ""
+
+    # Step 1: Write the introduction
+    intro_prompt = (
+        f"You are a professional proposal writer.\n"
+        f"Write a VERY DETAILED introduction paragraph for a proposal.\n"
+        f"Title: {req.title}\nSummary: {req.summary}\n\n"
+        f"Introduction should be 4-6 long paragraphs explaining context, purpose, and importance.\n"
+        f"Return ONLY text (no JSON)."
+    )
     try:
-        resp = openai.chat.completions.create(
+        intro_resp = openai.chat.completions.create(
             model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": prompt}],
+            messages=[{"role": "user", "content": intro_prompt}],
             temperature=0.7,
-            max_tokens=2500
+            max_tokens=2000,
         )
-        draft_text = resp.choices[0].message.content.strip()
-        # Ensure valid JSON
-        draft_json = json.loads(draft_text)
-        full_draft = draft_json.get("full_draft", "")
+        full_draft += intro_resp.choices[0].message.content.strip() + "\n\n"
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Draft generation failed: {e}")
+            status_code=500, detail=f"Introduction generation failed: {e}")
 
-    # Optional: send draft to Proofreader Agent
+    # Step 2: Write detailed sections for each key point
+    for idx, kp in enumerate(req.key_points):
+        point_prompt = (
+            f"Write a VERY DETAILED section for the key point {idx+1}: {kp}\n"
+            f"Expand this into multiple paragraphs (3-5 paragraphs) with examples, benefits, challenges, and implementation details.\n"
+            f"Return ONLY text (no JSON)."
+        )
+        try:
+            point_resp = openai.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[{"role": "user", "content": point_prompt}],
+                temperature=0.7,
+                max_tokens=2000,
+            )
+            full_draft += point_resp.choices[0].message.content.strip() + \
+                "\n\n"
+        except Exception as e:
+            raise HTTPException(
+                status_code=500, detail=f"Key point {idx+1} generation failed: {e}")
+
+    # Step 3: Write conclusion
+    conclusion_prompt = (
+        f"Write a VERY DETAILED conclusion for a proposal titled '{req.title}'.\n"
+        f"Summarize all key points and emphasize impact. Include 3-4 long paragraphs.\n"
+        f"Return ONLY text."
+    )
+    try:
+        concl_resp = openai.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "user", "content": conclusion_prompt}],
+            temperature=0.7,
+            max_tokens=2000
+        )
+        full_draft += concl_resp.choices[0].message.content.strip()
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Conclusion generation failed: {e}")
+
+    # Optional: Proofreader
     proof_url = "http://127.0.0.1:8002/proofread"
     feedback = ""
     try:
-        r = requests.post(proof_url, json={"draft": full_draft}, timeout=10)
+        r = requests.post(proof_url, json={"draft": full_draft}, timeout=30)
         feedback = r.json().get("feedback", "")
     except:
         feedback = "Proofreader unavailable."
