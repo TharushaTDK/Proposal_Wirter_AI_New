@@ -9,7 +9,7 @@ function App() {
   const [history, setHistory] = useState([]);
   const [expandedMap, setExpandedMap] = useState({});
 
-  // Load history
+  // Load history from localStorage
   useEffect(() => {
     const savedHistory = localStorage.getItem("proposal_history");
     if (savedHistory) setHistory(JSON.parse(savedHistory));
@@ -46,11 +46,11 @@ function App() {
       if (!data.proposals) {
         setError("Invalid response from server.");
       } else {
-        // Ensure full_draft exists
+        // Ensure full_draft exists and is string
         const filledProposals = data.proposals.map(p => ({
           ...p,
-          full_draft: p.full_draft || "Draft not generated yet.",
-          feedback: p.feedback || "No feedback."
+          full_draft: typeof p.full_draft === "string" ? p.full_draft : JSON.stringify(p.full_draft, null, 2),
+          feedback: typeof p.feedback === "string" ? p.feedback : "No feedback."
         }));
         setProposals(filledProposals);
         saveHistory(requirements, filledProposals);
@@ -83,7 +83,7 @@ function App() {
 
       {/* Main Panel */}
       <div className="main-panel flex-1 p-6 overflow-y-auto">
-        <h1 className="text-2xl font-bold mb-4 text-black">📝 Multi-Agent Proposal Writer</h1>
+        <h1 className="text-2xl font-bold mb-4 text-white">📝 Multi-Agent Proposal Writer</h1>
 
         <textarea
           className="w-full p-3 mb-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-blue-50 text-black resize-none"
@@ -104,7 +104,12 @@ function App() {
 
         {proposals.length > 0 &&
           proposals.map((proposal, pIdx) => {
-            const paragraphs = proposal.full_draft.split("\n\n");
+            // Ensure full_draft is string
+            const fullDraftText = typeof proposal.full_draft === "string"
+              ? proposal.full_draft
+              : JSON.stringify(proposal.full_draft, null, 2);
+
+            const paragraphs = fullDraftText.split("\n\n");
             const intro = paragraphs[0] || "";
             const conclusion = paragraphs.slice(-1)[0] || "";
             const bodyParagraphs = paragraphs.slice(1, -1);
@@ -120,7 +125,7 @@ function App() {
                   <p className="ml-4 mt-1 text-black whitespace-pre-wrap">{intro}</p>
                 </div>
 
-                {/* Key Points */}
+                {/* Body */}
                 <div className="keypoints">
                   {proposal.key_points.map((kp, kIdx) => {
                     const paraText = bodyParagraphs[kIdx] || "";
@@ -152,7 +157,8 @@ function App() {
                 {/* Proofreader feedback */}
                 {proposal.feedback && (
                   <div className="mt-2 p-2 border-t border-gray-300 text-sm text-black">
-                    <strong>Proofreader Feedback:</strong> {proposal.feedback}
+                    <strong>Proofreader Feedback:</strong>
+                    <pre>{proposal.feedback}</pre>
                   </div>
                 )}
               </div>
