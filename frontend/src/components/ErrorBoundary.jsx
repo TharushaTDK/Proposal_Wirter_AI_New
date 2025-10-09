@@ -29,8 +29,4 @@ class ErrorBoundary extends React.Component {
     }
 }
 
-<<<<<<< HEAD
 export default ErrorBoundary;
-=======
-export default ErrorBoundary;
->>>>>>> parent of 64f8d3b (Delete ErrorBoundary.jsx)

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./index.css";
+import Navbar from "./components/Navbar";
 
 function App() {
   const [requirements, setRequirements] = useState("");
@@ -7,9 +8,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [history, setHistory] = useState([]);
-  const [expandedMap, setExpandedMap] = useState({});
 
-  // Load history from localStorage
   useEffect(() => {
     const savedHistory = localStorage.getItem("proposal_history");
     if (savedHistory) setHistory(JSON.parse(savedHistory));
@@ -20,11 +19,6 @@ function App() {
     const newHistory = [newEntry, ...history];
     setHistory(newHistory);
     localStorage.setItem("proposal_history", JSON.stringify(newHistory));
-  };
-
-  const toggleExpanded = (pIdx, kIdx) => {
-    const key = `${pIdx}_${kIdx}`;
-    setExpandedMap(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
   const handleGenerate = async () => {
@@ -43,17 +37,10 @@ function App() {
       if (!res.ok) throw new Error(`Analyzer error: ${res.statusText}`);
       const data = await res.json();
 
-      if (!data.proposals) {
-        setError("Invalid response from server.");
-      } else {
-        // Ensure full_draft exists and is string
-        const filledProposals = data.proposals.map(p => ({
-          ...p,
-          full_draft: typeof p.full_draft === "string" ? p.full_draft : JSON.stringify(p.full_draft, null, 2),
-          feedback: typeof p.feedback === "string" ? p.feedback : "No feedback."
-        }));
-        setProposals(filledProposals);
-        saveHistory(requirements, filledProposals);
+      if (!data.proposals) setError("Invalid response from server.");
+      else {
+        setProposals(data.proposals);
+        saveHistory(requirements, data.proposals);
       }
     } catch (err) {
       console.error(err);
@@ -64,7 +51,9 @@ function App() {
   };
 
   return (
+
     <div className="app-container flex h-screen font-sans text-black">
+
       {/* Sidebar */}
       <div className="history-sidebar w-1/4 bg-gray-100 p-4 overflow-y-auto border-r border-gray-300">
         <h2 className="font-bold mb-2 text-lg">🕘 History</h2>
@@ -92,6 +81,7 @@ function App() {
           value={requirements}
           onChange={(e) => setRequirements(e.target.value)}
         />
+
         <button
           className="bg-blue-600 text-white font-semibold px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50 mb-4"
           onClick={handleGenerate}
@@ -102,68 +92,49 @@ function App() {
 
         {error && <p className="text-red-500 mb-4">{error}</p>}
 
-        {proposals.length > 0 &&
-          proposals.map((proposal, pIdx) => {
-            // Ensure full_draft is string
-            const fullDraftText = typeof proposal.full_draft === "string"
-              ? proposal.full_draft
-              : JSON.stringify(proposal.full_draft, null, 2);
+        {proposals.map((proposal, pIdx) => (
+          <div
+            key={pIdx}
+            className="proposal-report bg-white text-black p-6 mb-6 shadow-lg rounded-lg max-w-4xl mx-auto"
+          >
+            <h1 className="text-3xl font-bold mb-4 text-center">{proposal.title}</h1>
+            <p className="text-lg mb-6">{proposal.summary}</p>
 
-            const paragraphs = fullDraftText.split("\n\n");
-            const intro = paragraphs[0] || "";
-            const conclusion = paragraphs.slice(-1)[0] || "";
-            const bodyParagraphs = paragraphs.slice(1, -1);
+            {/* Table of Contents */}
+            <div className="mb-8 p-4 border rounded bg-gray-100">
+              <h2 className="text-2xl font-semibold mb-2">📑 Table of Contents</h2>
+              <ol className="list-decimal ml-6">
+                {(proposal.sections || []).map((sec, sIdx) => (
+                  <li
+                    key={sIdx}
+                    className="mb-1 cursor-pointer text-blue-600 hover:underline"
+                    onClick={() =>
+                      document
+                        .getElementById(`section-${pIdx}-${sIdx}`)
+                        ?.scrollIntoView({ behavior: "smooth" })
+                    }
+                  >
+                    {sec.title}
+                  </li>
+                ))}
+              </ol>
+            </div>
 
-            return (
-              <div key={pIdx} className="proposal-card border p-4 rounded-lg mb-6 shadow-sm bg-white text-black">
-                <h2 className="text-xl font-bold mb-2 text-black">{proposal.title}</h2>
-                <p className="font-semibold mb-2 text-black">{proposal.summary}</p>
-
-                {/* Intro */}
-                <div className="mb-3">
-                  <h3 className="font-semibold text-black">Introduction</h3>
-                  <p className="ml-4 mt-1 text-black whitespace-pre-wrap">{intro}</p>
-                </div>
-
-                {/* Body */}
-                <div className="keypoints">
-                  {proposal.key_points.map((kp, kIdx) => {
-                    const paraText = bodyParagraphs[kIdx] || "";
-                    const key = `${pIdx}_${kIdx}`;
-                    const isExpanded = expandedMap[key] ?? true;
-
-                    return (
-                      <div key={kIdx} className="mb-3">
-                        <h3
-                          className="font-semibold cursor-pointer hover:text-blue-600 text-black"
-                          onClick={() => toggleExpanded(pIdx, kIdx)}
-                        >
-                          {kIdx + 1}. {kp}
-                        </h3>
-                        {isExpanded && (
-                          <p className="ml-4 mt-1 text-black whitespace-pre-wrap">{paraText}</p>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Conclusion */}
-                <div className="mb-3">
-                  <h3 className="font-semibold text-black">Conclusion</h3>
-                  <p className="ml-4 mt-1 text-black whitespace-pre-wrap">{conclusion}</p>
-                </div>
-
-                {/* Proofreader feedback */}
-                {proposal.feedback && (
-                  <div className="mt-2 p-2 border-t border-gray-300 text-sm text-black">
-                    <strong>Proofreader Feedback:</strong>
-                    <pre>{proposal.feedback}</pre>
-                  </div>
-                )}
+            {/* Sections */}
+            {(proposal.sections || []).map((sec, sIdx) => (
+              <div
+                key={sIdx}
+                id={`section-${pIdx}-${sIdx}`}
+                className="proposal-section mb-8 break-after-page"
+              >
+                <h2 className="text-2xl font-semibold mb-3">{sec.title}</h2>
+                <p className="text-base whitespace-pre-wrap">{sec.content}</p>
               </div>
-            );
-          })}
+            ))}
+
+
+          </div>
+        ))}
       </div>
     </div>
   );
