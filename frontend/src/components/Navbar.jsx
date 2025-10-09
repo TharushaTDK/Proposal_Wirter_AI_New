@@ -1,28 +1,40 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X } from "lucide-react";
-import { useState } from "react";
+import { Menu, X } from "lucide-react"; // Make sure this package is installed
 
 const Navbar = () => {
-    const [isOpen, setIsOpen] = useState(false);
+    const [menuOpen, setMenuOpen] = useState(false);
+
+    const toggleMenu = () => setMenuOpen(!menuOpen);
 
     return (
-        <nav className="bg-blue-600 text-white shadow-lg fixed w-full z-50 top-0 left-0">
-            <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+        <nav className="bg-gray-900 text-white fixed top-0 left-0 w-full shadow-md z-50">
+            <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
                 {/* Logo */}
-                <div className="text-2xl font-bold tracking-wide">
-                    Hotel<span className="text-yellow-300">Booking</span>
-                </div>
+                <Link
+                    to="/"
+                    className="text-2xl font-bold tracking-wide text-blue-400 hover:text-blue-300"
+                >
+                    ProposalAI
+                </Link>
 
                 {/* Desktop Menu */}
-                <div className="hidden md:flex space-x-8">
-                    <Link to="/" className="hover:text-yellow-300 transition duration-200">Home</Link>
-                    <Link to="/history" className="hover:text-yellow-300 transition duration-200">History</Link>
-                    <Link to="/about" className="hover:text-yellow-300 transition duration-200">About Us</Link>
-                    <Link to="/support" className="hover:text-yellow-300 transition duration-200">Support</Link>
+                <div className="hidden md:flex space-x-8 text-lg">
+                    <Link to="/" className="hover:text-blue-400 transition">
+                        Home
+                    </Link>
+                    <Link to="/history" className="hover:text-blue-400 transition">
+                        History
+                    </Link>
+                    <Link to="/about" className="hover:text-blue-400 transition">
+                        About Us
+                    </Link>
+                    <Link to="/support" className="hover:text-blue-400 transition">
+                        Support
+                    </Link>
                     <Link
                         to="/login"
-                        className="bg-yellow-400 text-blue-900 font-semibold px-4 py-2 rounded-lg hover:bg-yellow-300 transition duration-300"
+                        className="bg-blue-600 px-4 py-2 rounded-lg hover:bg-blue-700 transition"
                     >
                         Login
                     </Link>
@@ -30,27 +42,53 @@ const Navbar = () => {
 
                 {/* Mobile Menu Button */}
                 <button
-                    onClick={() => setIsOpen(!isOpen)}
-                    className="md:hidden focus:outline-none"
+                    onClick={toggleMenu}
+                    className="md:hidden focus:outline-none hover:text-blue-400"
                 >
-                    {isOpen ? <X size={26} /> : <Menu size={26} />}
+                    {menuOpen ? <X size={28} /> : <Menu size={28} />}
                 </button>
             </div>
 
             {/* Mobile Menu */}
-            {isOpen && (
-                <div className="md:hidden bg-blue-700 space-y-2 py-3 px-6">
-                    <Link to="/" className="block hover:text-yellow-300" onClick={() => setIsOpen(false)}>Home</Link>
-                    <Link to="/history" className="block hover:text-yellow-300" onClick={() => setIsOpen(false)}>History</Link>
-                    <Link to="/about" className="block hover:text-yellow-300" onClick={() => setIsOpen(false)}>About Us</Link>
-                    <Link to="/support" className="block hover:text-yellow-300" onClick={() => setIsOpen(false)}>Support</Link>
-                    <Link
-                        to="/login"
-                        className="block bg-yellow-400 text-blue-900 text-center font-semibold px-4 py-2 rounded-lg hover:bg-yellow-300 transition duration-300"
-                        onClick={() => setIsOpen(false)}
-                    >
-                        Login
-                    </Link>
+            {menuOpen && (
+                <div className="md:hidden bg-gray-800 border-t border-gray-700">
+                    <div className="flex flex-col items-center space-y-4 py-4 text-lg">
+                        <Link
+                            to="/"
+                            onClick={toggleMenu}
+                            className="hover:text-blue-400 transition"
+                        >
+                            Home
+                        </Link>
+                        <Link
+                            to="/history"
+                            onClick={toggleMenu}
+                            className="hover:text-blue-400 transition"
+                        >
+                            History
+                        </Link>
+                        <Link
+                            to="/about"
+                            onClick={toggleMenu}
+                            className="hover:text-blue-400 transition"
+                        >
+                            About Us
+                        </Link>
+                        <Link
+                            to="/support"
+                            onClick={toggleMenu}
+                            className="hover:text-blue-400 transition"
+                        >
+                            Support
+                        </Link>
+                        <Link
+                            to="/login"
+                            onClick={toggleMenu}
+                            className="bg-blue-600 px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+                        >
+                            Login
+                        </Link>
+                    </div>
                 </div>
             )}
         </nav>
