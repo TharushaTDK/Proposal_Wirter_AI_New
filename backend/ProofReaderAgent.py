@@ -52,6 +52,7 @@ def proofread(req: ProofRequest):
     if len(draft.split()) < 300:  # warning if draft too short
         suggestions.append(
             "Draft seems too short; consider adding more details.")
+        
 
     # --- NLP: Grammar/Spelling check ---
     matches = tool.check(draft)
