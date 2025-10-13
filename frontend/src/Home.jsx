@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
 
 /**
- * Home.jsx - Enhanced UI
+ * Home.jsx - Enhanced UI with Login Integration
  * - Modern light theme with improved spacing and typography
  * - Better visual hierarchy and cleaner layout
  * - Enhanced color scheme and interactions
  * - History stores only completed proposals with all sections
  * - Frontend-only delete functionality
+ * - User authentication and plan display
  * - All backend integrations preserved
  */
 
@@ -42,6 +43,19 @@ export default function Home() {
 
     // Track completion state
     const [isCompleteProposal, setIsCompleteProposal] = useState(false);
+
+    // User authentication state
+    const [currentUser, setCurrentUser] = useState(null);
+
+    // Check authentication on component mount
+    useEffect(() => {
+        const userData = localStorage.getItem("currentUser");
+        if (!userData) {
+            window.location.href = "/";
+            return;
+        }
+        setCurrentUser(JSON.parse(userData));
+    }, []);
 
     // Check if current proposal is complete
     useEffect(() => {
@@ -225,8 +239,14 @@ export default function Home() {
         setExplainDone(true);
     }
 
-    // Guidance generation
+    // Guidance generation - ONLY FOR PRO USERS
     async function handleGuidance() {
+        // Check if user is on Pro plan
+        if (currentUser?.plan !== 'pro') {
+            setError("Please upgrade to Pro plan to access Project Timeline features!");
+            return;
+        }
+
         if (!proposal) return;
         setGuidanceLoading(true);
         setError("");
@@ -327,6 +347,12 @@ export default function Home() {
             console.error("Manual save error:", err);
             setError("Failed to save draft: " + (err.message || err));
         }
+    }
+
+    // Handle logout
+    function handleLogout() {
+        localStorage.removeItem("currentUser");
+        window.location.href = "/";
     }
 
     // UI render helpers
@@ -456,6 +482,24 @@ export default function Home() {
         );
     }
 
+    // Render upgrade message for free users
+    function renderUpgradeMessage() {
+        return (
+            <div className="mt-8 flex justify-center">
+                <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-xl p-6 max-w-md text-center">
+                    <div className="text-4xl mb-3">🚀</div>
+                    <h3 className="text-lg font-semibold text-purple-800 mb-2">Upgrade to Pro Plan</h3>
+                    <p className="text-gray-600 mb-4">
+                        Get access to advanced features like Project Timeline generation, detailed resource planning, and more!
+                    </p>
+                    <button className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white px-6 py-2 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105">
+                        Upgrade Now
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/30 text-gray-900 flex">
             {/* Sidebar */}
@@ -464,7 +508,27 @@ export default function Home() {
           ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} w-80 md:translate-x-0`}
             >
                 <div className="h-full flex flex-col">
-                    <div className="px-6 py-6 border-b border-gray-200">
+                    {/* User Info Section - ADDED */}
+                    <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50">
+                        <div className="flex items-center gap-3 mb-2">
+                            <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                                {currentUser?.username?.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <div className="text-sm font-semibold text-gray-900 truncate capitalize">
+                                    {currentUser?.username}
+                                </div>
+                                <div className={`text-xs px-2 py-1 rounded-full font-medium ${currentUser?.plan === 'pro'
+                                    ? 'bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700'
+                                    : 'bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-700'
+                                    }`}>
+                                    {currentUser?.plan === 'pro' ? '✨ Pro Plan' : '🆓 Free Plan'}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="px-6 py-4 border-b border-gray-200">
                         <div className="flex items-center justify-between">
                             <div>
                                 <h2 className="text-xl font-bold text-gray-900">Completed Proposals</h2>
@@ -593,15 +657,31 @@ export default function Home() {
             {/* Main content */}
             <main className="flex-1 ml-0 md:ml-80 min-h-screen p-6">
                 <div className="max-w-6xl mx-auto">
-                    {/* Header */}
+                    {/* Header - UPDATED WITH USER INFO */}
                     <header className="mb-8 flex items-center justify-between">
                         <div>
                             <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-blue-900 bg-clip-text text-transparent">
                                 Proposal Writer AI
                             </h1>
-                            <p className="text-gray-600 mt-2">Generate complete proposals with explanations, timelines & budgets</p>
+                            <div className="flex items-center gap-4 mt-2">
+                                <p className="text-gray-600">
+                                    Welcome back, <span className="font-semibold text-blue-600 capitalize">{currentUser?.username}</span>!
+                                </p>
+                                <span className={`text-xs font-medium px-3 py-1 rounded-full ${currentUser?.plan === 'pro'
+                                    ? 'bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 border border-purple-200'
+                                    : 'bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-700 border border-blue-200'
+                                    }`}>
+                                    {currentUser?.plan === 'pro' ? '✨ Pro Plan' : '🆓 Free Plan'}
+                                </span>
+                            </div>
                         </div>
                         <div className="flex items-center gap-3">
+                            <button
+                                onClick={handleLogout}
+                                className="text-sm px-4 py-2 rounded-xl border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 hover:shadow-md transition-all duration-300 font-medium"
+                            >
+                                Logout
+                            </button>
                             <button
                                 className="text-sm px-4 py-2 rounded-xl border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 hover:shadow-md transition-all duration-300 font-medium"
                                 onClick={() => {
@@ -721,26 +801,32 @@ Our proposed solution for the hotel booking system aims to meet all the requirem
                                 ))}
                             </div>
 
-                            {/* Guidance button below explanations */}
+                            {/* Guidance button below explanations - SHOW UPGRADE MESSAGE FOR FREE USERS */}
                             {!guidance && (
-                                <div className="mt-8 flex justify-center">
-                                    <button
-                                        onClick={handleGuidance}
-                                        disabled={guidanceLoading}
-                                        className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white px-8 py-3 rounded-xl font-semibold shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed flex items-center gap-2"
-                                    >
-                                        {guidanceLoading ? (
-                                            <>
-                                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                                Generating Timeline...
-                                            </>
-                                        ) : (
-                                            <>
-                                                <span>📅</span>
-                                                Get Project Timeline
-                                            </>
-                                        )}
-                                    </button>
+                                <div className="mt-8">
+                                    {currentUser?.plan === 'pro' ? (
+                                        <div className="flex justify-center">
+                                            <button
+                                                onClick={handleGuidance}
+                                                disabled={guidanceLoading}
+                                                className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white px-8 py-3 rounded-xl font-semibold shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed flex items-center gap-2"
+                                            >
+                                                {guidanceLoading ? (
+                                                    <>
+                                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                                        Generating Timeline...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <span>📅</span>
+                                                        Get Project Timeline
+                                                    </>
+                                                )}
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        renderUpgradeMessage()
+                                    )}
                                 </div>
                             )}
                         </section>
@@ -807,56 +893,132 @@ Our proposed solution for the hotel booking system aims to meet all the requirem
                                 Resources & Final Conclusion
                             </h2>
 
-                            {/* Split into Budget & Resources and Final Conclusion */}
-                            {budgetPlan.split("Final Conclusion:").map((section, idx) => {
-                                if (idx === 0) {
-                                    // Budget & Resource Plan Section
-                                    return section
-                                        .split(/(?=Week\s+\d+:)/) // Split by week
-                                        .map((weekBlock, wIdx) => {
-                                            const lines = weekBlock.trim().split("\n").filter((l) => l.trim() !== "");
-                                            if (!lines.length) return null;
-                                            const [weekTitle, ...tasks] = lines;
+                            {(() => {
+                                const sections = budgetPlan.split("Final Conclusion:");
+                                const budgetSection = sections[0] || "";
+                                const conclusionSection = sections[1] || "";
+
+                                console.log("Budget Section:", budgetSection); // Debug log
+
+                                // Extract all weeks using a more robust method
+                                const weeks = [];
+                                const weekMatches = budgetSection.matchAll(/Week\s+\d+:/gi);
+
+                                let lastIndex = 0;
+                                for (const match of weekMatches) {
+                                    const weekStart = match.index;
+                                    const weekTitle = match[0];
+
+                                    // Find the next week or end of section
+                                    const nextWeekMatch = /Week\s+\d+:/gi.exec(budgetSection.slice(weekStart + weekTitle.length));
+                                    const weekEnd = nextWeekMatch ? weekStart + weekTitle.length + nextWeekMatch.index : budgetSection.length;
+
+                                    const weekContent = budgetSection.slice(weekStart, weekEnd).trim();
+                                    weeks.push(weekContent);
+                                    lastIndex = weekEnd;
+                                }
+
+                                console.log("Found weeks:", weeks.length); // Debug log
+
+                                return (
+                                    <>
+                                        {/* Render all weeks */}
+                                        {weeks.map((weekContent, wIdx) => {
+                                            const lines = weekContent.split('\n').filter(line => line.trim());
+                                            if (lines.length === 0) return null;
+
+                                            const weekTitle = lines[0];
+                                            const taskLines = lines.slice(1);
+
+                                            // Group tasks (each task has 4 lines: Task, Roles, Hours, Cost)
+                                            const tasks = [];
+                                            let currentTask = {};
+
+                                            taskLines.forEach(line => {
+                                                const cleanLine = line.replace(/^[-•]\s*/, "").trim();
+
+                                                if (cleanLine.toLowerCase().startsWith('task:')) {
+                                                    // If we have a complete previous task, save it
+                                                    if (currentTask.task) {
+                                                        tasks.push({ ...currentTask });
+                                                    }
+                                                    currentTask = {
+                                                        task: cleanLine.replace('Task:', '').replace(/^task:/i, '').trim(),
+                                                        roles: '',
+                                                        hours: '',
+                                                        cost: ''
+                                                    };
+                                                } else if (cleanLine.toLowerCase().startsWith('roles:')) {
+                                                    currentTask.roles = cleanLine.replace('Roles:', '').replace(/^roles:/i, '').trim();
+                                                } else if (cleanLine.toLowerCase().includes('hour')) {
+                                                    currentTask.hours = cleanLine.replace(/Hours?:/i, '').trim();
+                                                } else if (cleanLine.toLowerCase().includes('cost')) {
+                                                    currentTask.cost = cleanLine.replace(/Cost:?/i, '').trim();
+                                                }
+                                            });
+
+                                            // Don't forget the last task
+                                            if (currentTask.task) {
+                                                tasks.push({ ...currentTask });
+                                            }
 
                                             return (
                                                 <div key={wIdx} className="mb-8 p-6 bg-gradient-to-r from-amber-50 to-yellow-50 rounded-xl border border-amber-200">
                                                     <h3 className="text-xl font-semibold text-amber-800 mb-4 flex items-center gap-2">
                                                         <span className="w-2 h-2 bg-amber-500 rounded-full"></span>
-                                                        {weekTitle}
+                                                        {weekTitle.replace(':', '')}
                                                     </h3>
-                                                    <ul className="space-y-3 ml-4">
+                                                    <div className="space-y-4">
                                                         {tasks.map((task, tIdx) => (
-                                                            <li key={tIdx} className="text-gray-700 flex items-start gap-3">
-                                                                <span className="w-1.5 h-1.5 bg-amber-400 rounded-full mt-2 flex-shrink-0"></span>
-                                                                <span className="leading-relaxed">{task.replace(/^[-•]\s*/, "")}</span>
-                                                            </li>
+                                                            <div key={tIdx} className="p-4 bg-white rounded-lg border border-amber-100 shadow-sm">
+                                                                <div className="font-semibold text-amber-700 mb-2 flex items-center gap-2">
+                                                                    <span>📝</span>
+                                                                    {task.task}
+                                                                </div>
+                                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+                                                                    <div className="text-gray-700 flex items-center gap-2">
+                                                                        <span>👥</span>
+                                                                        <span><strong>Roles:</strong> {task.roles}</span>
+                                                                    </div>
+                                                                    <div className="text-gray-700 flex items-center gap-2">
+                                                                        <span>⏱️</span>
+                                                                        <span><strong>Hours:</strong> {task.hours}</span>
+                                                                    </div>
+                                                                    <div className="text-gray-700 flex items-center gap-2">
+                                                                        <span>💰</span>
+                                                                        <span><strong>Cost:</strong> {task.cost}</span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
                                                         ))}
-                                                    </ul>
+                                                    </div>
                                                 </div>
                                             );
-                                        });
-                                } else {
-                                    // Final Conclusion Section
-                                    return (
-                                        <div key={idx} className="mt-8 p-6 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200">
-                                            <h3 className="text-xl font-semibold text-green-800 mb-4 flex items-center gap-2">
-                                                <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                                                Final Conclusion
-                                            </h3>
-                                            <div className="space-y-4">
-                                                {section
-                                                    .trim()
-                                                    .split(/\n{1,}/)
-                                                    .map((para, pIdx) => (
-                                                        <p key={pIdx} className="text-gray-700 leading-relaxed whitespace-pre-wrap">
-                                                            {para.trim()}
-                                                        </p>
-                                                    ))}
+                                        })}
+
+                                        {/* Render conclusion */}
+                                        {conclusionSection && (
+                                            <div className="mt-8 p-6 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200">
+                                                <h3 className="text-xl font-semibold text-green-800 mb-4 flex items-center gap-2">
+                                                    <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                                                    Final Conclusion
+                                                </h3>
+                                                <div className="space-y-4">
+                                                    {conclusionSection
+                                                        .trim()
+                                                        .split(/\n\s*\n/)
+                                                        .filter(para => para.trim())
+                                                        .map((para, pIdx) => (
+                                                            <p key={pIdx} className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                                                                {para.trim()}
+                                                            </p>
+                                                        ))}
+                                                </div>
                                             </div>
-                                        </div>
-                                    );
-                                }
-                            })}
+                                        )}
+                                    </>
+                                );
+                            })()}
                         </div>
                     )}
                 </div>

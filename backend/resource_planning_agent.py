@@ -47,40 +47,72 @@ Project Title: {req.title}
 Sections: {', '.join(req.table_of_contents)}
 Timeline: {req.timeline}
 
-Tasks:
-- Generate a **Budget & Resource Plan** for **at least 10 weeks**, with **3 or more tasks per week**.
-- For each task, provide:
-    - Task description
-    - Roles (Developer, Designer, Tester, etc.)
-    - Estimated hours
-    - Approximate cost in USD
-- Ensure tasks are realistic, distributed across weeks, and cover all project sections.
+CRITICAL REQUIREMENTS:
+- Generate EXACTLY 10 weeks of Budget & Resource Plan
+- Each week must have 3 tasks
+- Each task must include:
+  - Task description
+  - Roles (Developer, Designer, Tester, etc.)
+  - Estimated hours
+  - Approximate cost in USD
 
-Final Conclusion:
-- Provide a **professional, multi-paragraph conclusion** summarizing the project outcomes, feasibility, and deliverables.
-- Use clear line breaks for paragraphs.
-
-Format strictly like this:
+Format strictly like this - DO NOT SKIP ANY WEEKS:
 
 Budget & Resource Plan:
 Week 1:
-- Task: ...
-- Roles: ...
-- Hours: ...
-- Cost: ...
+- Task: [task description]
+- Roles: [roles]
+- Hours: [hours]
+- Cost: [cost]
+- Task: [task description]
+- Roles: [roles]
+- Hours: [hours]
+- Cost: [cost]
+- Task: [task description]
+- Roles: [roles]
+- Hours: [hours]
+- Cost: [cost]
 
 Week 2:
-- Task: ...
-- Roles: ...
-- Hours: ...
-- Cost: ...
+- Task: [task description]
+- Roles: [roles]
+- Hours: [hours]
+- Cost: [cost]
+- Task: [task description]
+- Roles: [roles]
+- Hours: [hours]
+- Cost: [cost]
+- Task: [task description]
+- Roles: [roles]
+- Hours: [hours]
+- Cost: [cost]
 
-...(continue up to at least Week 10)...
+Week 3:
+[continue with 3 tasks...]
+
+Week 4:
+[continue with 3 tasks...]
+
+Week 5:
+[continue with 3 tasks...]
+
+Week 6:
+[continue with 3 tasks...]
+
+Week 7:
+[continue with 3 tasks...]
+
+Week 8:
+[continue with 3 tasks...]
+
+Week 9:
+[continue with 3 tasks...]
+
+Week 10:
+[continue with 3 tasks...]
 
 Final Conclusion:
-Paragraph 1: ...
-Paragraph 2: ...
-Paragraph 3: ...
+[Provide a professional, multi-paragraph conclusion summarizing the project outcomes, feasibility, and deliverables. Use clear line breaks between paragraphs.]
 """
 
     try:
@@ -88,7 +120,7 @@ Paragraph 3: ...
             model="gpt-3.5-turbo",
             messages=[{"role": "user", "content": prompt}],
             temperature=0.6,
-            max_tokens=1500,
+            max_tokens=4000,  # Increased from 1500 to 4000
         )
 
         result = response.choices[0].message.content.strip()
