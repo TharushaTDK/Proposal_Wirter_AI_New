@@ -3,28 +3,27 @@ import React from "react";
 class ErrorBoundary extends React.Component {
     constructor(props) {
         super(props);
-        this.state = { hasError: false, error: null };
+        this.state = { hasError: false };
     }
 
     static getDerivedStateFromError(error) {
-        return { hasError: true, error };
+        return { hasError: true };
     }
 
-    componentDidCatch(error, errorInfo) {
-        console.error("ErrorBoundary caught:", error, errorInfo);
+    componentDidCatch(error, info) {
+        console.error("Error caught in ErrorBoundary:", error, info);
     }
 
     render() {
         if (this.state.hasError) {
             return (
-                <div style={{ color: "red" }}>
+                <div className="text-center mt-10 text-red-500">
                     <h2>Something went wrong.</h2>
-                    <details style={{ whiteSpace: "pre-wrap" }}>
-                        {this.state.error && this.state.error.toString()}
-                    </details>
+                    <p>Please try refreshing the page.</p>
                 </div>
             );
         }
+
         return this.props.children;
     }
 }
