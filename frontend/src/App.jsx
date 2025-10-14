@@ -4,6 +4,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import Landing from "./Landing";
 import Login from "./Login";
 import Home from "./Home";
+import CreateAcc from "./CreateAcc"; // Add this import
+import UpdatePlan from "./Update_plan.jsx";
 import ErrorBoundary from "./components/ErrorBoundary";
 
 function App() {
@@ -14,6 +16,8 @@ function App() {
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/home" element={<Home />} />
+          <Route path="/createacc" element={<CreateAcc />} /> {/* Add this route */}
+          <Route path="/update_plan" element={<UpdatePlan />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </Router>

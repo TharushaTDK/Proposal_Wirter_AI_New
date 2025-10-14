@@ -46,7 +46,7 @@ export default function Landing() {
                     </div>
                 </div>
 
-                {/* Authentication Buttons */}
+                {/*Authentication Buttons*/}
                 <div className="space-y-6 max-w-md mx-auto">
                     <button
                         onClick={() => navigate("/login")}
@@ -57,7 +57,7 @@ export default function Landing() {
                     </button>
 
                     <button
-                        onClick={() => navigate("/login")}
+                        onClick={() => navigate("/createacc")}  // Changed this line
                         className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white text-lg font-semibold py-4 px-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-3"
                     >
                         <span>✨</span>
@@ -65,28 +65,13 @@ export default function Landing() {
                     </button>
                 </div>
 
-                {/* Demo Credentials */}
-                <div className="mt-12 p-6 bg-gradient-to-r from-gray-50 to-blue-50 rounded-2xl border border-gray-200">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-3">Demo Credentials</h3>
-                    <div className="grid md:grid-cols-2 gap-4 text-sm">
-                        <div className="text-left">
-                            <p className="font-medium text-gray-700">John (Pro Plan)</p>
-                            <p className="text-gray-600">Username: <span className="font-mono">john</span></p>
-                            <p className="text-gray-600">Password: <span className="font-mono">proposal</span></p>
-                        </div>
-                        <div className="text-left">
-                            <p className="font-medium text-gray-700">Peter (Free Plan)</p>
-                            <p className="text-gray-600">Username: <span className="font-mono">peter</span></p>
-                            <p className="text-gray-600">Password: <span className="font-mono">proposal</span></p>
-                        </div>
-                    </div>
-                </div>
+
             </div>
 
             {/* Footer */}
             <footer className="mt-16 text-center">
                 <p className="text-gray-500 text-sm">
-                    Powered by AI • Secure • Professional
+                    Powered by ProposalAI • Secure • Professional
                 </p>
             </footer>
         </div>

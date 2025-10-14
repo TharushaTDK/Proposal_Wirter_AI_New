@@ -143,38 +143,8 @@ export default function Login() {
                         </button>
                     </form>
 
-                    {/* Quick Test Buttons */}
-                    <div className="mt-4 flex gap-2">
-                        <button
-                            type="button"
-                            onClick={() => {
-                                setUsername("john");
-                                setPassword("proposal");
-                            }}
-                            className="flex-1 text-xs px-3 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors"
-                        >
-                            Fill John
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => {
-                                setUsername("peter");
-                                setPassword("proposal");
-                            }}
-                            className="flex-1 text-xs px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
-                        >
-                            Fill Peter
-                        </button>
-                    </div>
 
-                    {/* Demo Credentials */}
-                    <div className="mt-6 p-4 bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl border border-gray-200">
-                        <h4 className="font-semibold text-gray-900 mb-2 text-sm">Demo Credentials:</h4>
-                        <div className="space-y-1 text-xs text-gray-600">
-                            <p><strong>John (Pro):</strong> john / proposal</p>
-                            <p><strong>Peter (Free):</strong> peter / proposal</p>
-                        </div>
-                    </div>
+
                 </div>
             </div>
         </div>

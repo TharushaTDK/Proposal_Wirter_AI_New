@@ -482,7 +482,7 @@ export default function Home() {
         );
     }
 
-    // Render upgrade message for free users
+    // In the renderUpgradeMessage function, update the button to navigate to update_plan
     function renderUpgradeMessage() {
         return (
             <div className="mt-8 flex justify-center">
@@ -492,14 +492,16 @@ export default function Home() {
                     <p className="text-gray-600 mb-4">
                         Get access to advanced features like Project Timeline generation, detailed resource planning, and more!
                     </p>
-                    <button className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white px-6 py-2 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105">
+                    <button
+                        onClick={() => window.location.href = "/update_plan"}
+                        className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white px-6 py-2 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105"
+                    >
                         Upgrade Now
                     </button>
                 </div>
             </div>
         );
     }
-
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/30 text-gray-900 flex">
             {/* Sidebar */}
