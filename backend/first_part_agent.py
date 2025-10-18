@@ -72,7 +72,8 @@ class ExplanationIRAnalyzer:
         return {
             "word_count": len(filtered_words),
             "paragraph_count": len(paragraphs),
-            "relevance_score": len(common_words) / len(set(filtered_original)) if filtered_original else 0,#on-topic overlap with the original point
+            # on-topic overlap with the original point
+            "relevance_score": len(common_words) / len(set(filtered_original)) if filtered_original else 0,
             "technical_terms": self._count_technical_terms(explanation),
             "explanation_quality": self._calculate_quality_metrics(explanation, original_point),
             "structure_analysis": {
@@ -112,9 +113,12 @@ class ExplanationIRAnalyzer:
             1 for term in original_key_terms if term in explanation.lower())
 
         return {
-            "key_terms_coverage": covered_terms / len(original_key_terms) if original_key_terms else 0,#how many key terms from the point appear in the explanation
-            "explanation_to_point_ratio": len(explanation_words) / len(original_words) if original_words else 0,#length ratio
-            "unique_concepts": len(set(explanation_words)) / len(explanation_words) if explanation_words else 0#type/token ratio
+            # how many key terms from the point appear in the explanation
+            "key_terms_coverage": covered_terms / len(original_key_terms) if original_key_terms else 0,
+            # length ratio
+            "explanation_to_point_ratio": len(explanation_words) / len(original_words) if original_words else 0,
+            # type/token ratio
+            "unique_concepts": len(set(explanation_words)) / len(explanation_words) if explanation_words else 0
         }
 
 
