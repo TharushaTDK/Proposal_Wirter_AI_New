@@ -33,7 +33,7 @@ class PointExplainRequest(BaseModel):
 
 
 class ExplanationIRAnalyzer:
-    def __init__(self):
+    def _init_(self):
         # Common technical terms for analysis
         self.technical_terms = {
             'development': ['api', 'database', 'framework', 'integration', 'deployment', 'backend', 'frontend'],
@@ -126,7 +126,7 @@ async def explain_point(req: PointExplainRequest):
     # Step 1: Instructions text
     instructions = (
         "You are a professional proposal writer. "
-        "Explain the given point in exactly **two separate paragraphs**. "
+        "Explain the given point in exactly *two separate paragraphs*. "
         "Paragraph 1 should describe the main idea and approach. "
         "Paragraph 2 should describe implementation details and benefits. "
         "Separate the paragraphs with a blank line."
