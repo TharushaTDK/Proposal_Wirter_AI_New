@@ -33,7 +33,7 @@ class PointExplainRequest(BaseModel):
 
 
 class ExplanationIRAnalyzer:
-    def _init_(self):
+    def __init__(self):
         # Common technical terms for analysis
         self.technical_terms = {
             'development': ['api', 'database', 'framework', 'integration', 'deployment', 'backend', 'frontend'],
@@ -72,7 +72,6 @@ class ExplanationIRAnalyzer:
         return {
             "word_count": len(filtered_words),
             "paragraph_count": len(paragraphs),
-            # on-topic overlap with the original point
             "relevance_score": len(common_words) / len(set(filtered_original)) if filtered_original else 0,
             "technical_terms": self._count_technical_terms(explanation),
             "explanation_quality": self._calculate_quality_metrics(explanation, original_point),
@@ -113,11 +112,8 @@ class ExplanationIRAnalyzer:
             1 for term in original_key_terms if term in explanation.lower())
 
         return {
-            # how many key terms from the point appear in the explanation
             "key_terms_coverage": covered_terms / len(original_key_terms) if original_key_terms else 0,
-            # length ratio
             "explanation_to_point_ratio": len(explanation_words) / len(original_words) if original_words else 0,
-            # type/token ratio
             "unique_concepts": len(set(explanation_words)) / len(explanation_words) if explanation_words else 0
         }
 
@@ -130,7 +126,7 @@ async def explain_point(req: PointExplainRequest):
     # Step 1: Instructions text
     instructions = (
         "You are a professional proposal writer. "
-        "Explain the given point in exactly *two separate paragraphs*. "
+        "Explain the given point in exactly **two separate paragraphs**. "
         "Paragraph 1 should describe the main idea and approach. "
         "Paragraph 2 should describe implementation details and benefits. "
         "Separate the paragraphs with a blank line."
