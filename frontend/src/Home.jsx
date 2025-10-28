@@ -1,15 +1,7 @@
 import React, { useEffect, useState } from "react";
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
-/**
- * Home.jsx - Enhanced UI with Login Integration
- * - Modern light theme with improved spacing and typography
- * - Better visual hierarchy and cleaner layout
- * - Enhanced color scheme and interactions
- * - History stores only completed proposals with all sections
- * - Frontend-only delete functionality
- * - User authentication and plan display
- * - All backend integrations preserved
- */
 
 function formatDate(iso) {
     try {
@@ -36,6 +28,7 @@ export default function Home() {
     const [guidanceLoading, setGuidanceLoading] = useState(false);
     const [budgetLoading, setBudgetLoading] = useState(false);
     const [error, setError] = useState("");
+    const [downloading, setDownloading] = useState(false);
 
     // history
     const [history, setHistory] = useState([]);
@@ -147,6 +140,70 @@ export default function Home() {
             console.error("save history error:", err);
         }
     }
+
+    // Download as Text File
+    const downloadAsText = () => {
+        if (!isCompleteProposal) {
+            setError("Please complete all sections before downloading");
+            return;
+        }
+
+        const content = generateTextContent();
+        const blob = new Blob([content], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${proposal.title.replace(/\s+/g, '_')}_proposal.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    };
+
+
+
+    // Generate text content for download
+    const generateTextContent = () => {
+        let content = `PROPOSAL: ${proposal.title}\n`;
+        content += `Generated on: ${new Date().toLocaleString()}\n`;
+        content += `="=".repeat(50)}\n\n`;
+
+        content += `ORIGINAL REQUIREMENTS:\n${requirements}\n\n`;
+        content += `="=".repeat(50)}\n\n`;
+
+        content += `PROPOSAL OVERVIEW\n`;
+        content += `="=".repeat(50)}\n`;
+        content += `Title: ${proposal.title}\n\n`;
+
+        content += `POINTS OF VIEW:\n`;
+        const points = Array.isArray(proposal.point_of_view)
+            ? proposal.point_of_view
+            : String(proposal.point_of_view || "").split("\n");
+        points.forEach((point, index) => {
+            content += `${index + 1}. ${String(point).replace(/^•\\s*/, "")}\n`;
+        });
+
+        content += `\nINTRODUCTION:\n${proposal.introduction}\n\n`;
+        content += `="=".repeat(50)}\n\n`;
+
+        content += `DETAILED EXPLANATIONS\n`;
+        content += `="=".repeat(50)}\n`;
+        explanations.forEach((item, index) => {
+            content += `\n${index + 1}. ${item.point}\n`;
+            content += `${item.explanation}\n`;
+            content += `-`.repeat(40) + `\n`;
+        });
+
+        content += `\n\nPROJECT TIMELINE GUIDANCE\n`;
+        content += `="=".repeat(50)}\n`;
+        content += `${guidance}\n\n`;
+
+        content += `BUDGET & RESOURCE PLAN\n`;
+        content += `="=".repeat(50)}\n`;
+        content += `${budgetPlan}\n`;
+
+        return content;
+    };
 
     // load a history item into UI
     function loadHistoryItem(item) {
@@ -355,6 +412,27 @@ export default function Home() {
         window.location.href = "/";
     }
 
+    // Download buttons component
+    function renderDownloadButtons() {
+        if (!isCompleteProposal) return null;
+
+        return (
+            <div className="flex justify-center gap-4 mt-8">
+                <button
+                    onClick={downloadAsText}
+                    disabled={downloading}
+                    className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-6 py-3 rounded-xl font-semibold shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Download as Text
+                </button>
+
+            </div>
+        );
+    }
+
     // UI render helpers
     function renderProposalCard() {
         if (!proposal) return null;
@@ -443,24 +521,26 @@ export default function Home() {
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-6">
                 <div className="flex items-center justify-between mb-4">
                     <h3 className="font-semibold text-gray-800">Progress</h3>
-                    {isCompleteProposal ? (
-                        <span className="text-green-600 text-sm font-medium flex items-center gap-1">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                            </svg>
-                            Complete - Saved to History
-                        </span>
-                    ) : (
-                        <button
-                            onClick={handleManualSave}
-                            className="text-blue-600 text-sm font-medium hover:text-blue-700 transition-colors flex items-center gap-1"
-                        >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-                            </svg>
-                            Save Draft
-                        </button>
-                    )}
+                    <div className="flex items-center gap-4">
+                        {isCompleteProposal ? (
+                            <span className="text-green-600 text-sm font-medium flex items-center gap-1">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                                Complete - Ready to Download
+                            </span>
+                        ) : (
+                            <button
+                                onClick={handleManualSave}
+                                className="text-blue-600 text-sm font-medium hover:text-blue-700 transition-colors flex items-center gap-1"
+                            >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                                </svg>
+                                Save Draft
+                            </button>
+                        )}
+                    </div>
                 </div>
                 <div className="flex items-center justify-between">
                     {steps.map((step, index) => (
@@ -502,6 +582,7 @@ export default function Home() {
             </div>
         );
     }
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/30 text-gray-900 flex">
             {/* Sidebar */}
@@ -638,6 +719,10 @@ export default function Home() {
                                 <span className="w-1 h-1 bg-gray-400 rounded-full"></span>
                                 Click the × icon to delete proposals (frontend only)
                             </div>
+                            <div className="flex items-center gap-2">
+                                <span className="w-1 h-1 bg-gray-400 rounded-full"></span>
+                                Download completed proposals as Text or PDF
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -759,7 +844,7 @@ Our proposed solution for the hotel booking system aims to meet all the requirem
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                     </svg>
-                                    Saved to history
+                                    Ready to Download
                                 </div>
                             )}
                         </div>
@@ -774,255 +859,257 @@ Our proposed solution for the hotel booking system aims to meet all the requirem
                         )}
                     </section>
 
-                    {/* Proposal card */}
-                    {renderProposalCard()}
+                    {/* Main proposal content for PDF export */}
+                    <div id="proposal-content" className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
+                        {/* Proposal card */}
+                        {renderProposalCard()}
 
-                    {/* Explanations card */}
-                    {explanations.length > 0 && (
-                        <section className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 mb-8 transition-all duration-300 hover:shadow-md">
-                            <h3 className="text-2xl font-bold mb-6 text-gray-900 flex items-center gap-3">
-                                <span className="w-3 h-3 bg-green-500 rounded-full"></span>
-                                Detailed Explanations
-                            </h3>
+                        {/* Explanations card */}
+                        {explanations.length > 0 && (
+                            <section className="mb-8">
+                                <h3 className="text-2xl font-bold mb-6 text-gray-900 flex items-center gap-3">
+                                    <span className="w-3 h-3 bg-green-500 rounded-full"></span>
+                                    Detailed Explanations
+                                </h3>
 
-                            <div className="space-y-6">
-                                {explanations.map((it, i) => (
-                                    <div key={i} className="p-5 bg-gray-50 rounded-xl border border-gray-200 transition-all duration-300 hover:bg-white">
-                                        <div className="text-lg font-semibold mb-3 text-gray-800 flex items-center gap-2">
-                                            <span className="text-blue-600">{i + 1}.</span>
-                                            {it.point}
-                                        </div>
-                                        <div className="space-y-3">
-                                            {it.explanation.split(/\n\s*\n/).map((para, pi) => (
-                                                <p key={pi} className="text-gray-700 leading-relaxed whitespace-pre-wrap">
-                                                    {para.trim()}
-                                                </p>
-                                            ))}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-
-                            {/* Guidance button below explanations - SHOW UPGRADE MESSAGE FOR FREE USERS */}
-                            {!guidance && (
-                                <div className="mt-8">
-                                    {currentUser?.plan === 'pro' ? (
-                                        <div className="flex justify-center">
-                                            <button
-                                                onClick={handleGuidance}
-                                                disabled={guidanceLoading}
-                                                className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white px-8 py-3 rounded-xl font-semibold shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed flex items-center gap-2"
-                                            >
-                                                {guidanceLoading ? (
-                                                    <>
-                                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                                        Generating Timeline...
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <span>📅</span>
-                                                        Get Project Timeline
-                                                    </>
-                                                )}
-                                            </button>
-                                        </div>
-                                    ) : (
-                                        renderUpgradeMessage()
-                                    )}
-                                </div>
-                            )}
-                        </section>
-                    )}
-
-                    {/* Guidance card */}
-                    {guidance && (
-                        <section className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 mb-8 transition-all duration-300 hover:shadow-md">
-                            <h3 className="text-2xl font-bold mb-6 text-gray-900 flex items-center gap-3">
-                                <span className="w-3 h-3 bg-purple-500 rounded-full"></span>
-                                Project Timeline Guidance
-                            </h3>
-
-                            <div className="space-y-4">
-                                {guidance.split(/(?=Week\s+\d+:)/).map((block, idx) => {
-                                    const lines = block.trim().split("\n").filter(Boolean);
-                                    if (lines.length === 0) return null;
-                                    const [title, ...tasks] = lines;
-                                    return (
-                                        <div key={idx} className="p-5 bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl border border-purple-200 transition-all duration-300 hover:shadow-md">
-                                            <div className="font-bold text-gray-800 mb-3 text-lg">{title.trim()}</div>
-                                            <ul className="space-y-2 ml-4">
-                                                {tasks.map((t, j) => (
-                                                    <li key={j} className="text-gray-700 flex items-start gap-3">
-                                                        <span className="w-1.5 h-1.5 bg-purple-400 rounded-full mt-2 flex-shrink-0"></span>
-                                                        <span>{t.replace(/^[-•]\s*/, "").trim()}</span>
-                                                    </li>
+                                <div className="space-y-6">
+                                    {explanations.map((it, i) => (
+                                        <div key={i} className="p-5 bg-gray-50 rounded-xl border border-gray-200">
+                                            <div className="text-lg font-semibold mb-3 text-gray-800 flex items-center gap-2">
+                                                <span className="text-blue-600">{i + 1}.</span>
+                                                {it.point}
+                                            </div>
+                                            <div className="space-y-3">
+                                                {it.explanation.split(/\n\s*\n/).map((para, pi) => (
+                                                    <p key={pi} className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                                                        {para.trim()}
+                                                    </p>
                                                 ))}
-                                            </ul>
+                                            </div>
                                         </div>
-                                    );
-                                })}
-                            </div>
-
-                            {/* Budget button */}
-                            {!budgetPlan && (
-                                <div className="mt-8 flex justify-center">
-                                    <button
-                                        onClick={handleBudget}
-                                        disabled={budgetLoading}
-                                        className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white px-8 py-3 rounded-xl font-semibold shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed flex items-center gap-2"
-                                    >
-                                        {budgetLoading ? (
-                                            <>
-                                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                                Generating Resources...
-                                            </>
-                                        ) : (
-                                            <>
-                                                <span>💰</span>
-                                                Generate Resources & Conclusion
-                                            </>
-                                        )}
-                                    </button>
+                                    ))}
                                 </div>
-                            )}
-                        </section>
-                    )}
 
-                    {/* Budget & Conclusion */}
-                    {budgetPlan && (
-                        <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 mb-16 transition-all duration-300 hover:shadow-md">
-                            <h2 className="text-3xl font-bold mb-8 text-center bg-gradient-to-r from-amber-600 to-amber-700 bg-clip-text text-transparent">
-                                Resources & Final Conclusion
-                            </h2>
+                                {/* Guidance button below explanations - SHOW UPGRADE MESSAGE FOR FREE USERS */}
+                                {!guidance && (
+                                    <div className="mt-8">
+                                        {currentUser?.plan === 'pro' ? (
+                                            <div className="flex justify-center">
+                                                <button
+                                                    onClick={handleGuidance}
+                                                    disabled={guidanceLoading}
+                                                    className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white px-8 py-3 rounded-xl font-semibold shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed flex items-center gap-2"
+                                                >
+                                                    {guidanceLoading ? (
+                                                        <>
+                                                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                                            Generating Timeline...
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <span>📅</span>
+                                                            Get Project Timeline
+                                                        </>
+                                                    )}
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            renderUpgradeMessage()
+                                        )}
+                                    </div>
+                                )}
+                            </section>
+                        )}
 
-                            {(() => {
-                                const sections = budgetPlan.split("Final Conclusion:");
-                                const budgetSection = sections[0] || "";
-                                const conclusionSection = sections[1] || "";
+                        {/* Guidance card */}
+                        {guidance && (
+                            <section className="mb-8">
+                                <h3 className="text-2xl font-bold mb-6 text-gray-900 flex items-center gap-3">
+                                    <span className="w-3 h-3 bg-purple-500 rounded-full"></span>
+                                    Project Timeline Guidance
+                                </h3>
 
-                                console.log("Budget Section:", budgetSection); // Debug log
+                                <div className="space-y-4">
+                                    {guidance.split(/(?=Week\s+\d+:)/).map((block, idx) => {
+                                        const lines = block.trim().split("\n").filter(Boolean);
+                                        if (lines.length === 0) return null;
+                                        const [title, ...tasks] = lines;
+                                        return (
+                                            <div key={idx} className="p-5 bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl border border-purple-200">
+                                                <div className="font-bold text-gray-800 mb-3 text-lg">{title.trim()}</div>
+                                                <ul className="space-y-2 ml-4">
+                                                    {tasks.map((t, j) => (
+                                                        <li key={j} className="text-gray-700 flex items-start gap-3">
+                                                            <span className="w-1.5 h-1.5 bg-purple-400 rounded-full mt-2 flex-shrink-0"></span>
+                                                            <span>{t.replace(/^[-•]\s*/, "").trim()}</span>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
 
-                                // Extract all weeks using a more robust method
-                                const weeks = [];
-                                const weekMatches = budgetSection.matchAll(/Week\s+\d+:/gi);
+                                {/* Budget button */}
+                                {!budgetPlan && (
+                                    <div className="mt-8 flex justify-center">
+                                        <button
+                                            onClick={handleBudget}
+                                            disabled={budgetLoading}
+                                            className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white px-8 py-3 rounded-xl font-semibold shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed flex items-center gap-2"
+                                        >
+                                            {budgetLoading ? (
+                                                <>
+                                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                                    Generating Resources...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <span>💰</span>
+                                                    Generate Resources & Conclusion
+                                                </>
+                                            )}
+                                        </button>
+                                    </div>
+                                )}
+                            </section>
+                        )}
 
-                                let lastIndex = 0;
-                                for (const match of weekMatches) {
-                                    const weekStart = match.index;
-                                    const weekTitle = match[0];
+                        {/* Budget & Conclusion */}
+                        {budgetPlan && (
+                            <div className="mb-8">
+                                <h2 className="text-3xl font-bold mb-8 text-center bg-gradient-to-r from-amber-600 to-amber-700 bg-clip-text text-transparent">
+                                    Resources & Final Conclusion
+                                </h2>
 
-                                    // Find the next week or end of section
-                                    const nextWeekMatch = /Week\s+\d+:/gi.exec(budgetSection.slice(weekStart + weekTitle.length));
-                                    const weekEnd = nextWeekMatch ? weekStart + weekTitle.length + nextWeekMatch.index : budgetSection.length;
+                                {(() => {
+                                    const sections = budgetPlan.split("Final Conclusion:");
+                                    const budgetSection = sections[0] || "";
+                                    const conclusionSection = sections[1] || "";
 
-                                    const weekContent = budgetSection.slice(weekStart, weekEnd).trim();
-                                    weeks.push(weekContent);
-                                    lastIndex = weekEnd;
-                                }
+                                    // Extract all weeks using a more robust method
+                                    const weeks = [];
+                                    const weekMatches = budgetSection.matchAll(/Week\s+\d+:/gi);
 
-                                console.log("Found weeks:", weeks.length); // Debug log
+                                    let lastIndex = 0;
+                                    for (const match of weekMatches) {
+                                        const weekStart = match.index;
+                                        const weekTitle = match[0];
 
-                                return (
-                                    <>
-                                        {/* Render all weeks */}
-                                        {weeks.map((weekContent, wIdx) => {
-                                            const lines = weekContent.split('\n').filter(line => line.trim());
-                                            if (lines.length === 0) return null;
+                                        // Find the next week or end of section
+                                        const nextWeekMatch = /Week\s+\d+:/gi.exec(budgetSection.slice(weekStart + weekTitle.length));
+                                        const weekEnd = nextWeekMatch ? weekStart + weekTitle.length + nextWeekMatch.index : budgetSection.length;
 
-                                            const weekTitle = lines[0];
-                                            const taskLines = lines.slice(1);
+                                        const weekContent = budgetSection.slice(weekStart, weekEnd).trim();
+                                        weeks.push(weekContent);
+                                        lastIndex = weekEnd;
+                                    }
 
-                                            // Group tasks (each task has 4 lines: Task, Roles, Hours, Cost)
-                                            const tasks = [];
-                                            let currentTask = {};
+                                    return (
+                                        <>
+                                            {/* Render all weeks */}
+                                            {weeks.map((weekContent, wIdx) => {
+                                                const lines = weekContent.split('\n').filter(line => line.trim());
+                                                if (lines.length === 0) return null;
 
-                                            taskLines.forEach(line => {
-                                                const cleanLine = line.replace(/^[-•]\s*/, "").trim();
+                                                const weekTitle = lines[0];
+                                                const taskLines = lines.slice(1);
 
-                                                if (cleanLine.toLowerCase().startsWith('task:')) {
-                                                    // If we have a complete previous task, save it
-                                                    if (currentTask.task) {
-                                                        tasks.push({ ...currentTask });
+                                                // Group tasks (each task has 4 lines: Task, Roles, Hours, Cost)
+                                                const tasks = [];
+                                                let currentTask = {};
+
+                                                taskLines.forEach(line => {
+                                                    const cleanLine = line.replace(/^[-•]\s*/, "").trim();
+
+                                                    if (cleanLine.toLowerCase().startsWith('task:')) {
+                                                        // If we have a complete previous task, save it
+                                                        if (currentTask.task) {
+                                                            tasks.push({ ...currentTask });
+                                                        }
+                                                        currentTask = {
+                                                            task: cleanLine.replace('Task:', '').replace(/^task:/i, '').trim(),
+                                                            roles: '',
+                                                            hours: '',
+                                                            cost: ''
+                                                        };
+                                                    } else if (cleanLine.toLowerCase().startsWith('roles:')) {
+                                                        currentTask.roles = cleanLine.replace('Roles:', '').replace(/^roles:/i, '').trim();
+                                                    } else if (cleanLine.toLowerCase().includes('hour')) {
+                                                        currentTask.hours = cleanLine.replace(/Hours?:/i, '').trim();
+                                                    } else if (cleanLine.toLowerCase().includes('cost')) {
+                                                        currentTask.cost = cleanLine.replace(/Cost:?/i, '').trim();
                                                     }
-                                                    currentTask = {
-                                                        task: cleanLine.replace('Task:', '').replace(/^task:/i, '').trim(),
-                                                        roles: '',
-                                                        hours: '',
-                                                        cost: ''
-                                                    };
-                                                } else if (cleanLine.toLowerCase().startsWith('roles:')) {
-                                                    currentTask.roles = cleanLine.replace('Roles:', '').replace(/^roles:/i, '').trim();
-                                                } else if (cleanLine.toLowerCase().includes('hour')) {
-                                                    currentTask.hours = cleanLine.replace(/Hours?:/i, '').trim();
-                                                } else if (cleanLine.toLowerCase().includes('cost')) {
-                                                    currentTask.cost = cleanLine.replace(/Cost:?/i, '').trim();
+                                                });
+
+                                                // Don't forget the last task
+                                                if (currentTask.task) {
+                                                    tasks.push({ ...currentTask });
                                                 }
-                                            });
 
-                                            // Don't forget the last task
-                                            if (currentTask.task) {
-                                                tasks.push({ ...currentTask });
-                                            }
+                                                return (
+                                                    <div key={wIdx} className="mb-8 p-6 bg-gradient-to-r from-amber-50 to-yellow-50 rounded-xl border border-amber-200">
+                                                        <h3 className="text-xl font-semibold text-amber-800 mb-4 flex items-center gap-2">
+                                                            <span className="w-2 h-2 bg-amber-500 rounded-full"></span>
+                                                            {weekTitle.replace(':', '')}
+                                                        </h3>
+                                                        <div className="space-y-4">
+                                                            {tasks.map((task, tIdx) => (
+                                                                <div key={tIdx} className="p-4 bg-white rounded-lg border border-amber-100 shadow-sm">
+                                                                    <div className="font-semibold text-amber-700 mb-2 flex items-center gap-2">
+                                                                        <span>📝</span>
+                                                                        {task.task}
+                                                                    </div>
+                                                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+                                                                        <div className="text-gray-700 flex items-center gap-2">
+                                                                            <span>👥</span>
+                                                                            <span><strong>Roles:</strong> {task.roles}</span>
+                                                                        </div>
+                                                                        <div className="text-gray-700 flex items-center gap-2">
+                                                                            <span>⏱️</span>
+                                                                            <span><strong>Hours:</strong> {task.hours}</span>
+                                                                        </div>
+                                                                        <div className="text-gray-700 flex items-center gap-2">
+                                                                            <span>💰</span>
+                                                                            <span><strong>Cost:</strong> {task.cost}</span>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
 
-                                            return (
-                                                <div key={wIdx} className="mb-8 p-6 bg-gradient-to-r from-amber-50 to-yellow-50 rounded-xl border border-amber-200">
-                                                    <h3 className="text-xl font-semibold text-amber-800 mb-4 flex items-center gap-2">
-                                                        <span className="w-2 h-2 bg-amber-500 rounded-full"></span>
-                                                        {weekTitle.replace(':', '')}
+                                            {/* Render conclusion */}
+                                            {conclusionSection && (
+                                                <div className="mt-8 p-6 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200">
+                                                    <h3 className="text-xl font-semibold text-green-800 mb-4 flex items-center gap-2">
+                                                        <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                                                        Final Conclusion
                                                     </h3>
                                                     <div className="space-y-4">
-                                                        {tasks.map((task, tIdx) => (
-                                                            <div key={tIdx} className="p-4 bg-white rounded-lg border border-amber-100 shadow-sm">
-                                                                <div className="font-semibold text-amber-700 mb-2 flex items-center gap-2">
-                                                                    <span>📝</span>
-                                                                    {task.task}
-                                                                </div>
-                                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
-                                                                    <div className="text-gray-700 flex items-center gap-2">
-                                                                        <span>👥</span>
-                                                                        <span><strong>Roles:</strong> {task.roles}</span>
-                                                                    </div>
-                                                                    <div className="text-gray-700 flex items-center gap-2">
-                                                                        <span>⏱️</span>
-                                                                        <span><strong>Hours:</strong> {task.hours}</span>
-                                                                    </div>
-                                                                    <div className="text-gray-700 flex items-center gap-2">
-                                                                        <span>💰</span>
-                                                                        <span><strong>Cost:</strong> {task.cost}</span>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        ))}
+                                                        {conclusionSection
+                                                            .trim()
+                                                            .split(/\n\s*\n/)
+                                                            .filter(para => para.trim())
+                                                            .map((para, pIdx) => (
+                                                                <p key={pIdx} className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                                                                    {para.trim()}
+                                                                </p>
+                                                            ))}
                                                     </div>
                                                 </div>
-                                            );
-                                        })}
+                                            )}
+                                        </>
+                                    );
+                                })()}
+                            </div>
+                        )}
 
-                                        {/* Render conclusion */}
-                                        {conclusionSection && (
-                                            <div className="mt-8 p-6 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200">
-                                                <h3 className="text-xl font-semibold text-green-800 mb-4 flex items-center gap-2">
-                                                    <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                                                    Final Conclusion
-                                                </h3>
-                                                <div className="space-y-4">
-                                                    {conclusionSection
-                                                        .trim()
-                                                        .split(/\n\s*\n/)
-                                                        .filter(para => para.trim())
-                                                        .map((para, pIdx) => (
-                                                            <p key={pIdx} className="text-gray-700 leading-relaxed whitespace-pre-wrap">
-                                                                {para.trim()}
-                                                            </p>
-                                                        ))}
-                                                </div>
-                                            </div>
-                                        )}
-                                    </>
-                                );
-                            })()}
-                        </div>
-                    )}
+                        {/* Download buttons */}
+                        {renderDownloadButtons()}
+                    </div>
                 </div>
             </main>
         </div>
