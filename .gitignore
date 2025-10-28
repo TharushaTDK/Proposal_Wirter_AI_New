@@ -7,12 +7,15 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# Environment files
+# Environment files - CRITICAL: Never commit environment files!
 .env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+backend/.env
+backend/.env.*
+*.env
 
 # Build outputs
 dist/
@@ -29,6 +32,35 @@ Thumbs.db
 .vscode/
 .idea/
 *.swp
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+backend/venv/
+ENV/
+env.bak/
 
 # Optional: ignore lock files if you want cleaner diffs (not recommended for teams)
 # package-lock.json
