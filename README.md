@@ -2,6 +2,7 @@
 A sophisticated multi-agent AI system that automates professional project proposal creation. Built with FastAPI microservices and React.js, this intelligent platform transforms basic requirements into comprehensive, actionable proposals with timelines and budget planning.
 
 ✨ Features
+
 🤝 Free Tier
 1. AI-Powered Proposal Generation - Transform requirements into structured proposals
 2. Detailed Point Explanations - Get comprehensive explanations for each proposal point
