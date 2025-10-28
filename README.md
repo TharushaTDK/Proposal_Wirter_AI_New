@@ -93,33 +93,33 @@ real-time notifications, and cloud sync. The app should have a
 modern UI and work on both iOS and Android.
 
 🏗️ Project Structure
-proposal_writing_tool/
+proposal_writer_AI/
 ├── backend/
-│   ├── data/
-│   ├── venv/
-│   ├── analyze_introduction_agent.py
-│   ├── first_part_agent.py
-│   ├── guidance_agent.py
-│   ├── history_agent.py
-│   ├── requirements.txt
-│   ├── resource_planning_agent.py
+│ ├── data/
+│ ├── venv/
+│ ├── analyze_introduction_agent.py
+│ ├── first_part_agent.py
+│ ├── guidance_agent.py
+│ ├── history_agent.py
+│ ├── requirements.txt
+│ └── resource_planning_agent.py
 ├── frontend/
-│   ├── node_modules/
-│   ├── public/
-│   ├── src/
-│   │   ├── assets/
-│   │   ├── components/
-│   │   ├── App.css
-│   │   ├── App.jsx
-│   │   ├── CreateAcc.jsx
-│   │   ├── Home.jsx
-│   │   ├── index.css
-│   │   ├── Landing.jsx
-│   │   ├── Login.jsx
-│   │   ├── main.jsx
-│   │   └── Update_plan.jsx
-│   ├── package.json
-│   └── vite.config.js (or similar bundler config)
+│ ├── node_modules/
+│ ├── public/
+│ ├── src/
+│ │ ├── assets/
+│ │ ├── components/
+│ │ ├── App.css
+│ │ ├── App.jsx
+│ │ ├── CreateAcc.jsx
+│ │ ├── Home.jsx
+│ │ ├── index.css
+│ │ ├── Landing.jsx
+│ │ ├── Login.jsx
+│ │ ├── main.jsx
+│ │ └── Update_plan.jsx
+│ ├── package.json
+│ └── vite.config.js
 ├── README.md
 └── .gitignore
 
